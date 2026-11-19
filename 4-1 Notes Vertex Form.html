@@ -86,6 +86,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .vin input { width: 4.2em; font: inherit; font-size: 18px; padding: 4px 8px; border: 2px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); text-align: center; }
 .small { font-size: 14px; }
 [hidden] { display: none !important; }
+p.big { font-size: 21px; line-height: 1.5; }
+h1.big { font-size: clamp(28px, 6vw, 38px); }
+.graph.mini { max-width: 340px; width: 100%; margin: 0 auto; }
 .notes { background: var(--accent-soft); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .notes h2 { font-family: var(--display); font-size: 20px; margin: 0; }
 .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
@@ -213,11 +216,11 @@ function explorer(el, cfg) {
 const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 const steps = [
   el => {
-    el.innerHTML = `<h1>Meet the parent function</h1>
-      <p>The simplest quadratic is <b>y = x²</b>. Its graph is a U-shape called a <b>parabola</b>.</p>
-      <p>The turning point is called the <b>vertex</b>. For y = x², the vertex is at (0, 0).</p>
-      <div class="graph"><canvas id="cv"></canvas></div>
-      <p class="muted">Today you will change the numbers in <b>y = a(x − h)² + k</b> and watch what happens to this parabola.</p>`;
+    el.innerHTML = `<h1 class="big">Meet the parent function</h1>
+      <p class="big">The simplest quadratic is <b>y = x²</b>. Its graph is a U-shape called a <b>parabola</b>.</p>
+      <p class="big">The turning point is called the <b>vertex</b>. For y = x², the vertex is at (0, 0).</p>
+      <div class="graph mini"><canvas id="cv"></canvas></div>
+      <p class="big muted">Today you will change the numbers in <b>y = a(x − h)² + k</b> and watch what happens to this parabola.</p>`;
     const cv = el.querySelector("#cv");
     window.__redraw = () => draw(cv, [{ a: 1, h: 0, k: 0, vertex: true }]);
     window.__redraw();
