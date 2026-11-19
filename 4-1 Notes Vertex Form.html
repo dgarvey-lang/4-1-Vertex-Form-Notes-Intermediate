@@ -85,6 +85,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .vin { display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 20px; flex-wrap: wrap; }
 .vin input { width: 4.2em; font: inherit; font-size: 18px; padding: 4px 8px; border: 2px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); text-align: center; }
 .small { font-size: 14px; }
+[hidden] { display: none !important; }
+.notes { background: var(--accent-soft); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.notes h2 { font-family: var(--display); font-size: 20px; margin: 0; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.checks label { display: flex; align-items: center; gap: 10px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.checks input { width: 20px; height: 20px; accent-color: var(--good); }
+.finish { display: flex; align-items: center; gap: 16px; background: var(--good-soft); border: 2px solid var(--good); border-radius: 10px; padding: 16px; }
+.finish b { display: block; font-family: var(--display); font-size: 24px; color: var(--good); }
+.badge { flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--good); color: var(--paper); display: grid; place-items: center; font-size: 32px; font-weight: 700; }
 @media (prefers-reduced-motion: no-preference) { .step { animation: in .25s ease-out; } @keyframes in { from { opacity: .4; transform: translateY(6px); } } }
 </style>
 </head>
@@ -268,14 +277,32 @@ const steps = [
   },
   ...[[1, 3, 8], [-1, -2, 9], [0.5, -5, 0], [-1, -2, -5], [2, 7, -3], [-3, 0, -2]].map((e, i, arr) => el => practice(el, e, i + 1, arr.length)),
   el => {
-    el.innerHTML = `<h1>You did it!</h1>
+    el.innerHTML = `<h1>Almost done!</h1>
       <p>You can now read a parabola straight from its equation.</p>
       <div class="rule">
         <div><b>Vertex</b><span>(h, k)</span></div>
         <div><b>Opens up</b><span>a is positive, the vertex is a minimum</span></div>
         <div><b>Opens down</b><span>a is negative, the vertex is a maximum</span></div>
       </div>
-      <p class="muted">Tap any dot at the top to go back to a step.</p>`;
+      <div class="notes">
+        <h2>Make sure your notes are filled out</h2>
+        <p>Check off each part of your <b>4-1 Notes Vertex Form</b> sheet when it is complete.</p>
+        <div class="checks" id="checks"></div>
+      </div>
+      <div class="finish" id="done" hidden>
+        <div class="badge" aria-hidden="true">✓</div>
+        <div><b>You are done!</b><span>Show your teacher your completed notes.</span></div>
+      </div>
+      <p class="muted">Need to fill something in? Tap any dot at the top to go back to that step.</p>`;
+    const parts = ["Part 1: Parent function", "Part 2: What a does", "Part 3: Number next to x", "Part 4: Number at the end", "Part 5: Predict first", "Part 6: Rules I discovered", "Part 7: Practice (all 6)"];
+    const box = el.querySelector("#checks"), done = el.querySelector("#done");
+    const upd = () => { done.hidden = [...box.querySelectorAll("input")].some(c => !c.checked); };
+    parts.forEach((p, i) => {
+      const l = document.createElement("label");
+      l.innerHTML = `<input type="checkbox" id="np${i}"> ${p}`;
+      l.querySelector("input").onchange = upd;
+      box.appendChild(l);
+    });
     window.__redraw = null;
   },
 ];
