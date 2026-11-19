@@ -1,8 +1,8 @@
-# 4.1 Graphing in Vertex Form: Discovery Lesson
+# 4-1 Notes Vertex Form
 
 An interactive, step-by-step discovery lesson for y = a(x − h)² + k.
 
-Open `index.html` in a browser (or turn on GitHub Pages for this repository) to use it.
+Open `4-1 Notes Vertex Form.html` in a browser (or turn on GitHub Pages for this repository) to use it.
 
 Steps:
 1. Meet the parent function y = x²
