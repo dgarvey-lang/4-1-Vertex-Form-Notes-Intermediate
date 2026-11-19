@@ -2,7 +2,9 @@
 
 An interactive, step-by-step discovery lesson for y = a(x − h)² + k.
 
-Open `4-1 Notes Vertex Form.html` in a browser (or turn on GitHub Pages for this repository) to use it.
+**Student link:** https://dgarvey-lang.github.io/4-1-Vertex-Form-Notes-Intermediate/
+
+You can also open `4-1 Notes Vertex Form.html` directly in a browser.
 
 Steps:
 1. Meet the parent function y = x²
