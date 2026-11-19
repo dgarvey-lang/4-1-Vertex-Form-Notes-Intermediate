@@ -23,17 +23,20 @@
   --bad: #b8432f;
   --bad-soft: #fbe7e3;
   --line: #d3dce2;
+  --balloon: #f2667a;
+  --balloon-edge: #c23a50;
+  --hand: #f3d2b3;
   --display: "Lexend", system-ui, sans-serif;
   --body: "Atkinson Hyperlegible", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #12181d; --paper: #1a232a; --ink: #e6edf2; --muted: #9aaab5; --grid: #26323b; --axis: #5d6f7b;
   --parent: #5f707b; --accent: #6aa8f5; --accent-soft: #1d3149; --good: #5cc98a; --good-soft: #17352a;
-  --bad: #f08a76; --bad-soft: #3d221d; --line: #2c3a44; color-scheme: dark } }
+  --bad: #f08a76; --bad-soft: #3d221d; --line: #2c3a44; --balloon: #e8566c; --balloon-edge: #ffa3b0; --hand: #c9a487; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #12181d; --paper: #1a232a; --ink: #e6edf2; --muted: #9aaab5; --grid: #26323b; --axis: #5d6f7b;
   --parent: #5f707b; --accent: #6aa8f5; --accent-soft: #1d3149; --good: #5cc98a; --good-soft: #17352a;
-  --bad: #f08a76; --bad-soft: #3d221d; --line: #2c3a44; color-scheme: dark }
+  --bad: #f08a76; --bad-soft: #3d221d; --line: #2c3a44; --balloon: #e8566c; --balloon-edge: #ffa3b0; --hand: #c9a487; color-scheme: dark }
 
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5; }
@@ -89,6 +92,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 p.big { font-size: 21px; line-height: 1.5; }
 h1.big { font-size: clamp(28px, 6vw, 38px); }
 .graph.mini { max-width: 340px; width: 100%; margin: 0 auto; }
+.graph.mid { max-width: 420px; width: 100%; margin: 0 auto; }
+.bcap { font-family: var(--display); font-weight: 700; font-size: 22px; text-align: center; color: var(--accent); min-height: 1.4em; }
 .notes { background: var(--accent-soft); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .notes h2 { font-family: var(--display); font-size: 20px; margin: 0; }
 .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
@@ -225,6 +230,7 @@ const steps = [
     window.__redraw = () => draw(cv, [{ a: 1, h: 0, k: 0, vertex: true }]);
     window.__redraw();
   },
+  el => balloon(el),
   el => explorer(el, {
     title: "What does a do?", key: "a", start: 1,
     intro: "The number in front of x² is <b>a</b>. Move the slider and compare your graph to the dashed parent graph.",
@@ -366,6 +372,118 @@ function practice(el, [a, h, k], n, total) {
     }
   };
   window.__redraw = null;
+}
+
+// ---------- balloon animation ----------
+let balloonRAF = 0;
+function balloon(el) {
+  el.innerHTML = `<h1>Think of a balloon</h1>
+    <p class="big">The number <b>a</b> works like your hands on a balloon.</p>
+    <div class="graph mid"><canvas id="bc" aria-label="A parabola-shaped balloon that stretches tall and narrow, then gets pressed down short and wide"></canvas></div>
+    <div class="bcap" id="bcap" aria-live="polite"></div>
+    <div class="chips">
+      <button class="chip" id="bs">Stretch it</button>
+      <button class="chip" id="bn">Normal</button>
+      <button class="chip" id="bp">Press down</button>
+      <button class="chip" id="bplay">Pause</button>
+    </div>
+    <div class="rule">
+      <div><b>Stretch (a bigger than 1)</b><span>the parabola gets NARROWER</span></div>
+      <div><b>Press down (a between 0 and 1)</b><span>the parabola gets WIDER</span></div>
+    </div>`;
+  const cv = el.querySelector("#bc"), capEl = el.querySelector("#bcap"), playB = el.querySelector("#bplay");
+  const S = { stretch: { a: 3, T: 7.5 }, normal: { a: 1, T: 5 }, press: { a: 1 / 3, T: 2.6 } };
+  // loop: normal -> stretch -> normal -> press -> normal (seconds)
+  const keys = [[0, "normal"], [1, "normal"], [2.4, "stretch"], [3.8, "stretch"], [5.2, "normal"], [6.2, "normal"], [7.6, "press"], [9, "press"], [10.4, "normal"]];
+  const LOOP = 10.4, ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let playing = !reduce, t0 = performance.now(), tPaused = 0, cur = { ...S.normal }, target = null, from = null, tStart = 0;
+  playB.textContent = playing ? "Pause" : "Play";
+  function stateAt(t) {
+    t %= LOOP;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const [ta, sa] = keys[i], [tb, sb] = keys[i + 1];
+      if (t >= ta && t <= tb) { const u = ease((t - ta) / (tb - ta || 1)); return mix(S[sa], S[sb], u, sb !== sa ? sb : sa); }
+    }
+    return { ...S.normal, mode: "normal" };
+  }
+  function mix(A, B, u, mode) {
+    return { a: Math.exp(Math.log(A.a) + (Math.log(B.a) - Math.log(A.a)) * u), T: A.T + (B.T - A.T) * u, mode, u };
+  }
+  function render(st) {
+    const dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect(), W = Math.max(200, r.width), H = Math.max(200, r.height);
+    cv.width = W * dpr; cv.height = H * dpr;
+    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const X0 = -5, X1 = 5, Y0 = -3, Y1 = 10, sx = x => (x - X0) / (X1 - X0) * W, sy = y => H - (y - Y0) / (Y1 - Y0) * H;
+    g.fillStyle = css("--paper"); g.fillRect(0, 0, W, H);
+    g.strokeStyle = css("--grid"); g.lineWidth = 1;
+    for (let i = X0; i <= X1; i++) { g.beginPath(); g.moveTo(sx(i), 0); g.lineTo(sx(i), H); g.stroke(); }
+    for (let i = Y0; i <= Y1; i++) { g.beginPath(); g.moveTo(0, sy(i)); g.lineTo(W, sy(i)); g.stroke(); }
+    g.strokeStyle = css("--axis"); g.lineWidth = 1.5; g.beginPath(); g.moveTo(sx(0), 0); g.lineTo(sx(0), H); g.moveTo(0, sy(0)); g.lineTo(W, sy(0)); g.stroke();
+    // string
+    g.strokeStyle = css("--muted"); g.lineWidth = 2; g.beginPath(); g.moveTo(sx(0), sy(-0.35));
+    for (let y = -0.35; y >= -3; y -= 0.1) g.lineTo(sx(0.18 * Math.sin(y * 3.2)), sy(y)); g.stroke();
+    // balloon body: parabola sides y = a x^2 up to T, closed by a rounded top
+    const a = st.a, T = st.T, w = Math.sqrt(T / a), cap = Math.min(1.6, w * 0.75);
+    g.beginPath(); g.moveTo(sx(-w), sy(T));
+    for (let x = -w; x <= w + 1e-9; x += w / 60) g.lineTo(sx(x), sy(a * x * x));
+    g.bezierCurveTo(sx(w), sy(T + cap * 1.3), sx(-w), sy(T + cap * 1.3), sx(-w), sy(T));
+    g.closePath();
+    g.fillStyle = css("--balloon"); g.globalAlpha = .9; g.fill(); g.globalAlpha = 1;
+    g.strokeStyle = css("--balloon-edge"); g.lineWidth = 3; g.stroke();
+    // shine
+    g.fillStyle = "rgba(255,255,255,.35)"; g.beginPath(); g.ellipse(sx(-w * 0.45), sy(T * 0.72), Math.max(4, w * W / 50), Math.max(8, T * H / 60), -0.3, 0, 7); g.fill();
+    // knot at the vertex
+    g.fillStyle = css("--balloon-edge"); g.beginPath(); g.moveTo(sx(0), sy(0.05)); g.lineTo(sx(-0.28), sy(-0.4)); g.lineTo(sx(0.28), sy(-0.4)); g.closePath(); g.fill();
+    // parent outline for comparison
+    g.save(); g.setLineDash([7, 6]); g.strokeStyle = css("--parent"); g.lineWidth = 2.5; g.beginPath(); let f = true;
+    for (let x = X0; x <= X1; x += 0.05) { const y = x * x; if (y > Y1) { f = true; continue; } f ? g.moveTo(sx(x), sy(y)) : g.lineTo(sx(x), sy(y)); f = false; }
+    g.stroke(); g.restore();
+    // hands / arrows
+    const top = T + cap, k = st.mode === "normal" ? 0 : (st.u ?? 1);
+    if (st.mode === "stretch" || (a > 1.15)) arrow(g, sx(0), sy(top + 0.3), sy(Math.min(Y1 - 0.2, top + 1.6)), css("--accent"));
+    if (st.mode === "press" || (a < 0.87)) {
+      const hy = sy(T + cap * 0.97) + 1;
+      g.fillStyle = css("--hand"); g.strokeStyle = css("--balloon-edge"); g.lineWidth = 2;
+      g.beginPath(); g.roundRect(sx(-w * 0.9), hy - 18, sx(w * 0.9) - sx(-w * 0.9), 18, 9); g.fill(); g.stroke();
+      arrow(g, sx(0), hy - 22 - 34, hy - 24, css("--accent"));
+    }
+    void k;
+    // caption
+    const near = (v, x) => Math.abs(v - x) < 0.03;
+    const aTxt = near(a, 3) ? "3" : near(a, 1) ? "1" : near(a, 1 / 3) ? "⅓" : a.toFixed(1);
+    let msg = "Normal: y = x²";
+    if (a > 1.05) msg = `Stretching: a = ${aTxt} → NARROWER`;
+    if (a < 0.95) msg = `Pressing down: a = ${aTxt} → WIDER`;
+    capEl.textContent = msg;
+  }
+  function arrow(g, x, yFrom, yTo, col) {
+    g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 4; g.beginPath(); g.moveTo(x, yFrom); g.lineTo(x, yTo); g.stroke();
+    const d = yTo < yFrom ? -1 : 1; g.beginPath(); g.moveTo(x, yTo + d * 2); g.lineTo(x - 9, yTo - d * 10); g.lineTo(x + 9, yTo - d * 10); g.closePath(); g.fill();
+  }
+  function frame(now) {
+    if (!cv.isConnected) return;
+    if (target) {
+      const u = Math.min(1, (now - tStart) / 900), e = ease(u);
+      cur = mix(from, S[target], e, target); cur.u = e;
+      if (u >= 1) target = null;
+    } else if (playing) {
+      cur = stateAt((now - t0) / 1000);
+    }
+    render(cur);
+    balloonRAF = requestAnimationFrame(frame);
+  }
+  const goTo = name => { playing = false; playB.textContent = "Play"; from = { ...cur }; target = name; tStart = performance.now(); if (reduce) { cur = { ...S[name], mode: name }; target = null; } };
+  el.querySelector("#bs").onclick = () => goTo("stretch");
+  el.querySelector("#bn").onclick = () => goTo("normal");
+  el.querySelector("#bp").onclick = () => goTo("press");
+  playB.onclick = () => {
+    playing = !playing; playB.textContent = playing ? "Pause" : "Play"; target = null;
+    if (playing) t0 = performance.now() - tPaused * 1000; else tPaused = ((performance.now() - t0) / 1000) % LOOP;
+  };
+  cancelAnimationFrame(balloonRAF);
+  window.__redraw = () => render(cur);
+  balloonRAF = requestAnimationFrame(frame);
 }
 
 function transforms(el, a, h, k, onRight) {
