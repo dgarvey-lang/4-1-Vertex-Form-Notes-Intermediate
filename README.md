@@ -14,3 +14,8 @@ Steps:
 5. Predict, then check: −(x − 4)² and (x + 3)² − 5
 6. Summary of the rules
 7. Practice: find the vertex and whether the graph opens up or down
+
+## Student notes sheet
+
+- `4-1 Notes Vertex Form - Student.pdf`: a 2-page fill-in sheet that follows the lesson
+- `4-1 Notes Vertex Form - Answer Key.pdf`: the same sheet with answers
