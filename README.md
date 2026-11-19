@@ -17,5 +17,5 @@ Steps:
 
 ## Student notes sheet
 
-- `4-1 Notes Vertex Form - Student.pdf`: a 2-page fill-in sheet that follows the lesson
+- `4-1 Notes Vertex Form - Student.pdf`: a 3-page fill-in sheet that follows the lesson
 - `4-1 Notes Vertex Form - Answer Key.pdf`: the same sheet with answers
