@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vertex Form Discovery</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one centered column, one step at a time, graph paper card + controls below */
+:root {
+  --bg: #f3f6f8;
+  --paper: #ffffff;
+  --ink: #1d2a33;
+  --muted: #5b6b76;
+  --grid: #e1e8ed;
+  --axis: #8a9aa5;
+  --parent: #a3b1ba;
+  --accent: #1f6fd1;
+  --accent-soft: #e3eefb;
+  --good: #1f8a4c;
+  --good-soft: #e2f4e9;
+  --bad: #b8432f;
+  --bad-soft: #fbe7e3;
+  --line: #d3dce2;
+  --display: "Lexend", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12181d; --paper: #1a232a; --ink: #e6edf2; --muted: #9aaab5; --grid: #26323b; --axis: #5d6f7b;
+  --parent: #5f707b; --accent: #6aa8f5; --accent-soft: #1d3149; --good: #5cc98a; --good-soft: #17352a;
+  --bad: #f08a76; --bad-soft: #3d221d; --line: #2c3a44; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12181d; --paper: #1a232a; --ink: #e6edf2; --muted: #9aaab5; --grid: #26323b; --axis: #5d6f7b;
+  --parent: #5f707b; --accent: #6aa8f5; --accent-soft: #1d3149; --good: #5cc98a; --good-soft: #17352a;
+  --bad: #f08a76; --bad-soft: #3d221d; --line: #2c3a44; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5; }
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lesson { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.dots { display: flex; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); border: 0; padding: 0; cursor: pointer; }
+.dot.on { background: var(--accent); }
+.dot.done { background: var(--good); }
+h1 { font-family: var(--display); font-size: clamp(24px, 5vw, 32px); line-height: 1.2; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 62ch; }
+.muted { color: var(--muted); }
+.eq { font-family: var(--display); font-weight: 500; font-size: clamp(22px, 5vw, 30px); text-align: center; padding: 6px 0; }
+.eq .a { color: var(--accent); }
+.graph { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+canvas { display: block; width: 100%; aspect-ratio: 1 / 1; max-width: 100%; max-width: 560px; margin: 0 auto; }
+.legend { display: flex; gap: 18px; justify-content: center; font-size: 14px; color: var(--muted); flex-wrap: wrap; padding-top: 4px; }
+.legend span::before { content: ""; display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--accent); vertical-align: middle; margin-right: 6px; }
+.legend .par::before { border-top: 3px dashed var(--parent); }
+.ctrl { display: flex; flex-direction: column; gap: 6px; }
+.ctrl label { font-weight: 700; }
+input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chips .lbl { font-size: 14px; color: var(--muted); margin-right: 2px; }
+button { font: inherit; cursor: pointer; }
+.chip { background: var(--accent-soft); color: var(--ink); border: 1px solid transparent; border-radius: 999px; padding: 6px 14px; font-family: var(--display); font-size: 15px; }
+.chip:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.q { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.q h2 { font-family: var(--display); font-size: 19px; margin: 0; font-weight: 700; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { background: var(--paper); color: var(--ink); border: 2px solid var(--line); border-radius: 8px; padding: 8px 16px; }
+.opt:hover { border-color: var(--accent); }
+.opt.right { border-color: var(--good); background: var(--good-soft); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.fb { min-height: 1.5em; font-weight: 700; }
+.fb.right { color: var(--good); }
+.fb.wrong { color: var(--bad); }
+.nav { display: flex; justify-content: space-between; gap: 12px; padding-top: 8px; }
+.btn { background: var(--accent); color: var(--paper); border: 0; border-radius: 8px; padding: 10px 22px; font-family: var(--display); font-weight: 500; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn:disabled { opacity: .35; cursor: default; }
+.rule { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
+.rule div { display: flex; gap: 10px; flex-wrap: wrap; }
+.rule b { font-family: var(--display); min-width: 9.5em; }
+.vin { display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 20px; flex-wrap: wrap; }
+.vin input { width: 4.2em; font: inherit; font-size: 18px; padding: 4px 8px; border: 2px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); text-align: center; }
+.small { font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) { .step { animation: in .25s ease-out; } @keyframes in { from { opacity: .4; transform: translateY(6px); } } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="lesson">4.1 · Graphing in Vertex Form</div>
+    <div class="dots" id="dots"></div>
+  </header>
+  <main id="step" class="step" style="display:flex;flex-direction:column;gap:16px"></main>
+  <div class="nav">
+    <button class="btn ghost" id="back">← Back</button>
+    <button class="btn" id="next">Next →</button>
+  </div>
+</div>
+
+<script>
+// ---------- helpers ----------
+const FR = { "-0.5": "−½", "0.5": "½", "-0.25": "−¼", "0.25": "¼" };
+function fmtA(a) {
+  if (a === 1) return "";
+  if (a === -1) return "−";
+  if (FR[String(a)]) return FR[String(a)];
+  return a < 0 ? "−" + (-a) : String(a);
+}
+function eqHTML(a, h, k) {
+  const A = `<span class="a">${fmtA(a)}</span>`;
+  let core = h === 0 ? "x²" : `(x ${h > 0 ? "−" : "+"} ${Math.abs(h)})²`;
+  if (a !== 1 && h === 0 && a !== -1) core = "x²";
+  let s = `y = ${A}${core}`;
+  if (k !== 0) s += ` ${k > 0 ? "+" : "−"} ${Math.abs(k)}`;
+  return s;
+}
+function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function draw(cv, curves) {
+  const dpr = window.devicePixelRatio || 1;
+  const r = cv.getBoundingClientRect();
+  const W = Math.max(200, r.width), H = Math.max(200, r.height);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const R = 10, sx = x => (x + R) / (2 * R) * W, sy = y => H - (y + R) / (2 * R) * H;
+  g.fillStyle = css("--paper"); g.fillRect(0, 0, W, H);
+  g.lineWidth = 1; g.strokeStyle = css("--grid");
+  for (let i = -R; i <= R; i++) { g.beginPath(); g.moveTo(sx(i), 0); g.lineTo(sx(i), H); g.moveTo(0, sy(i)); g.lineTo(W, sy(i)); g.stroke(); }
+  g.strokeStyle = css("--axis"); g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(sx(0), 0); g.lineTo(sx(0), H); g.moveTo(0, sy(0)); g.lineTo(W, sy(0)); g.stroke();
+  g.fillStyle = css("--muted"); g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+  for (let i = -R + 2; i < R; i += 2) if (i) { g.fillText(i, sx(i), sy(0) + 3); }
+  g.textAlign = "right"; g.textBaseline = "middle";
+  for (let i = -R + 2; i < R; i += 2) if (i) { g.fillText(i, sx(0) - 4, sy(i)); }
+  for (const c of curves) {
+    g.save();
+    g.strokeStyle = c.parent ? css("--parent") : css("--accent");
+    g.lineWidth = c.parent ? 2.5 : 3.5;
+    if (c.parent) g.setLineDash([7, 6]);
+    g.beginPath(); let first = true;
+    for (let px = 0; px <= W; px += 1) {
+      const x = px / W * 2 * R - R, y = c.a * (x - c.h) ** 2 + c.k;
+      if (y > R + 2 || y < -R - 2) { first = true; continue; }
+      first ? g.moveTo(px, sy(y)) : g.lineTo(px, sy(y)); first = false;
+    }
+    g.stroke(); g.restore();
+    if (c.vertex) {
+      g.fillStyle = c.parent ? css("--parent") : css("--accent");
+      g.beginPath(); g.arc(sx(c.h), sy(c.k), 6, 0, 7); g.fill();
+      g.fillStyle = css("--ink"); g.font = "bold 13px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "bottom";
+      const lx = sx(c.h) + 9 > W - 60 ? sx(c.h) - 70 : sx(c.h) + 9;
+      g.fillText(`(${c.h}, ${c.k})`, lx, c.a < 0 ? sy(c.k) - 6 : sy(c.k) + 20);
+    }
+  }
+}
+
+// ---------- shared question widget ----------
+function question(el, prompt, options, correct, why, onRight) {
+  const q = document.createElement("div"); q.className = "q";
+  q.innerHTML = `<h2>${prompt}</h2><div class="opts"></div><div class="fb" aria-live="polite"></div>`;
+  const opts = q.querySelector(".opts"), fb = q.querySelector(".fb");
+  options.forEach(o => {
+    const b = document.createElement("button"); b.className = "opt"; b.textContent = o;
+    b.onclick = () => {
+      opts.querySelectorAll(".opt").forEach(x => x.classList.remove("wrong"));
+      if (o === correct) { b.classList.add("right"); fb.className = "fb right"; fb.textContent = "Yes! " + why; onRight && onRight(); }
+      else { b.classList.add("wrong"); fb.className = "fb wrong"; fb.textContent = "Not quite. Look at the graph again and try another answer."; }
+    };
+    opts.appendChild(b);
+  });
+  el.appendChild(q);
+}
+
+// ---------- explorer step (one slider) ----------
+function explorer(el, cfg) {
+  const st = { a: 1, h: 0, k: 0 };
+  el.innerHTML = `<h1>${cfg.title}</h1><p>${cfg.intro}</p>
+    <div class="eq" id="eq"></div>
+    <div class="graph"><canvas id="cv"></canvas><div class="legend"><span class="par">parent y = x²</span><span>your graph</span></div></div>
+    <div class="ctrl"><label for="sl">${cfg.label}: <span id="val"></span></label>
+      <input type="range" id="sl" min="0" max="${cfg.values.length - 1}" step="1"></div>
+    <div class="chips"><span class="lbl">Try these from the slides:</span></div>`;
+  const cv = el.querySelector("#cv"), sl = el.querySelector("#sl"), val = el.querySelector("#val");
+  const show = () => {
+    el.querySelector("#eq").innerHTML = eqHTML(st.a, st.h, st.k);
+    val.textContent = cfg.fmt(st[cfg.key]);
+    draw(cv, [{ a: 1, h: 0, k: 0, parent: true }, { ...st, vertex: true }]);
+  };
+  const set = v => { st[cfg.key] = v; sl.value = cfg.values.indexOf(v); show(); };
+  sl.oninput = () => { st[cfg.key] = cfg.values[+sl.value]; show(); };
+  const chips = el.querySelector(".chips");
+  cfg.tries.forEach(t => { const b = document.createElement("button"); b.className = "chip"; b.innerHTML = eqHTML(...t.eq); b.onclick = () => set(t.v); chips.appendChild(b); });
+  set(cfg.start);
+  window.__redraw = show;
+  cfg.questions.forEach(q => question(el, ...q));
+}
+
+// ---------- steps ----------
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+const steps = [
+  el => {
+    el.innerHTML = `<h1>Meet the parent function</h1>
+      <p>The simplest quadratic is <b>y = x²</b>. Its graph is a U-shape called a <b>parabola</b>.</p>
+      <p>The turning point is called the <b>vertex</b>. For y = x², the vertex is at (0, 0).</p>
+      <div class="graph"><canvas id="cv"></canvas></div>
+      <p class="muted">Today you will change the numbers in <b>y = a(x − h)² + k</b> and watch what happens to this parabola.</p>`;
+    const cv = el.querySelector("#cv");
+    window.__redraw = () => draw(cv, [{ a: 1, h: 0, k: 0, vertex: true }]);
+    window.__redraw();
+  },
+  el => explorer(el, {
+    title: "What does a do?", key: "a", start: 1,
+    intro: "The number in front of x² is <b>a</b>. Move the slider and compare your graph to the dashed parent graph.",
+    label: "a", values: [-3, -2, -1, -0.5, -0.25, 0.25, 0.5, 1, 2, 3], fmt: v => fmtA(v) || "1",
+    tries: [{ v: -1, eq: [-1, 0, 0] }, { v: 0.5, eq: [0.5, 0, 0] }, { v: 3, eq: [3, 0, 0] }],
+    questions: [
+      ["When a is <b>negative</b> (like −1), the parabola…", ["gets wider", "flips upside down", "moves left"], "flips upside down", "A negative a reflects the graph so it opens down."],
+      ["When a is a <b>fraction</b> between 0 and 1 (like ½), the parabola gets…", ["wider", "narrower"], "wider", "A fraction less than 1 makes it wider."],
+      ["When a is <b>bigger than 1</b> (like 3), the parabola gets…", ["wider", "narrower"], "narrower", "A number greater than 1 makes it narrower."],
+    ],
+  }),
+  el => explorer(el, {
+    title: "What does the number next to x do?", key: "h", start: 0,
+    intro: "Now change the number inside the parentheses. Watch where the <b>vertex</b> goes.",
+    label: "h", values: range(-6, 6), fmt: v => v,
+    tries: [{ v: 2, eq: [1, 2, 0] }, { v: -4, eq: [1, -4, 0] }],
+    questions: [
+      ["y = (x <b>− 2</b>)² moves the parabola…", ["2 units left", "2 units right", "2 units up"], "2 units right", "Minus inside the parentheses moves it right."],
+      ["y = (x <b>+ 4</b>)² moves the parabola…", ["4 units left", "4 units right", "4 units down"], "4 units left", "Plus inside the parentheses moves it left. It is the opposite of what you might guess!"],
+    ],
+  }),
+  el => explorer(el, {
+    title: "What does the number at the end do?", key: "k", start: 0,
+    intro: "Now change the number added at the end. Watch the vertex again.",
+    label: "k", values: range(-7, 7), fmt: v => v,
+    tries: [{ v: 3, eq: [1, 0, 3] }, { v: -5, eq: [1, 0, -5] }],
+    questions: [
+      ["y = x² <b>+ 3</b> moves the parabola…", ["3 units up", "3 units down", "3 units right"], "3 units up", "Plus at the end moves it up."],
+      ["y = x² <b>− 5</b> moves the parabola…", ["5 units up", "5 units down", "5 units left"], "5 units down", "Minus at the end moves it down."],
+    ],
+  }),
+  el => predict(el, "Put it together", [-1, 4, 0],
+    ["Reflection (opens down)", "Shift 4 right", "Shift 4 left", "Wider"],
+    ["Reflection (opens down)", "Shift 4 right"]),
+  el => predict(el, "Put it together", [1, -3, -5],
+    ["Shift 3 left", "Shift 3 right", "Shift 5 up", "Shift 5 down"],
+    ["Shift 3 left", "Shift 5 down"]),
+  el => {
+    el.innerHTML = `<h1>The rules you discovered</h1>
+      <div class="eq">y = <span class="a">a</span>(x − h)² + k</div>
+      <div class="rule">
+        <div><b>a is negative</b><span>reflection, opens down</span></div>
+        <div><b>a is bigger than 1</b><span>narrower</span></div>
+        <div><b>a is between 0 and 1</b><span>wider</span></div>
+        <div><b>(x − h)</b><span>moves RIGHT h</span></div>
+        <div><b>(x + h)</b><span>moves LEFT h</span></div>
+        <div><b>+ k at the end</b><span>moves UP k</span></div>
+        <div><b>− k at the end</b><span>moves DOWN k</span></div>
+        <div><b>Vertex</b><span>is the point (h, k)</span></div>
+      </div>
+      <p class="muted">Watch the sign on h: the vertex of y = (x + 3)² is at (−3, 0).</p>`;
+    window.__redraw = null;
+  },
+  ...[[1, 3, 8], [-1, -2, 9], [0.5, -5, 0], [-1, -2, -5], [2, 7, -3], [-3, 0, -2]].map((e, i, arr) => el => practice(el, e, i + 1, arr.length)),
+  el => {
+    el.innerHTML = `<h1>You did it!</h1>
+      <p>You can now read a parabola straight from its equation.</p>
+      <div class="rule">
+        <div><b>Vertex</b><span>(h, k)</span></div>
+        <div><b>Opens up</b><span>a is positive, the vertex is a minimum</span></div>
+        <div><b>Opens down</b><span>a is negative, the vertex is a maximum</span></div>
+      </div>
+      <p class="muted">Tap any dot at the top to go back to a step.</p>`;
+    window.__redraw = null;
+  },
+];
+
+function predict(el, title, eq, choices, answers) {
+  el.innerHTML = `<h1>${title}</h1>
+    <p><b>Predict first.</b> How will this graph be different from y = x²? Pick every change you expect, then check.</p>
+    <div class="eq">${eqHTML(...eq)}</div>
+    <div class="opts" id="ch"></div>
+    <div><button class="btn" id="chk">Check my prediction</button></div>
+    <div class="fb" id="fb" aria-live="polite"></div>
+    <div class="graph" id="gw" hidden><canvas id="cv"></canvas><div class="legend"><span class="par">parent y = x²</span><span>${eqHTML(...eq)}</span></div></div>`;
+  const picked = new Set(), ch = el.querySelector("#ch"), fb = el.querySelector("#fb"), gw = el.querySelector("#gw"), cv = el.querySelector("#cv");
+  choices.forEach(c => {
+    const b = document.createElement("button"); b.className = "opt"; b.textContent = c; b.setAttribute("aria-pressed", "false");
+    b.onclick = () => { picked.has(c) ? picked.delete(c) : picked.add(c); b.style.borderColor = picked.has(c) ? "var(--accent)" : ""; b.style.background = picked.has(c) ? "var(--accent-soft)" : ""; b.setAttribute("aria-pressed", picked.has(c)); };
+    ch.appendChild(b);
+  });
+  el.querySelector("#chk").onclick = () => {
+    const ok = answers.length === picked.size && answers.every(a => picked.has(a));
+    fb.className = "fb " + (ok ? "right" : "wrong");
+    fb.textContent = ok ? "Great prediction! Here is the graph." : "Close. The graph below shows the answer: " + answers.join(" and ") + ".";
+    gw.hidden = false;
+    window.__redraw = () => draw(cv, [{ a: 1, h: 0, k: 0, parent: true }, { a: eq[0], h: eq[1], k: eq[2], vertex: true }]);
+    window.__redraw();
+  };
+  window.__redraw = null;
+}
+
+function practice(el, [a, h, k], n, total) {
+  el.innerHTML = `<h1>Practice ${n} of ${total}</h1>
+    <div class="eq">${eqHTML(a, h, k)}</div>
+    <div class="q" style="border:0;padding:0"><h2>1. What is the vertex?</h2>
+      <div class="vin">( <input id="vh" inputmode="numeric" aria-label="x of vertex"> , <input id="vk" inputmode="numeric" aria-label="y of vertex"> )
+      <button class="btn" id="vchk" style="font-size:15px">Check</button></div>
+      <div class="fb" id="vfb" aria-live="polite"></div></div>
+    <div id="more"></div>
+    <div class="graph" id="gw" hidden><canvas id="cv"></canvas></div>`;
+  const vfb = el.querySelector("#vfb"), more = el.querySelector("#more"), gw = el.querySelector("#gw"), cv = el.querySelector("#cv");
+  const num = s => +String(s).trim().replace("−", "-");
+  let shown = false;
+  el.querySelector("#vchk").onclick = () => {
+    const H = num(el.querySelector("#vh").value), K = num(el.querySelector("#vk").value);
+    if (H === h && K === k) {
+      vfb.className = "fb right"; vfb.textContent = `Yes! The vertex is (${h}, ${k}).`;
+      if (shown) return; shown = true;
+      question(more, "2. Which way does it open?", ["opens up", "opens down"], a > 0 ? "opens up" : "opens down",
+        a > 0 ? "a is positive, so it opens up and the vertex is a minimum." : "a is negative, so it opens down and the vertex is a maximum.",
+        () => { gw.hidden = false; window.__redraw = () => draw(cv, [{ a: 1, h: 0, k: 0, parent: true }, { a, h, k, vertex: true }]); window.__redraw(); });
+    } else {
+      vfb.className = "fb wrong";
+      vfb.textContent = H === -h && K === k && h !== 0 ? "Check the sign on h. (x − h) means the vertex x is +h." : "Not yet. The vertex is (h, k). Look at the number inside the parentheses and the number at the end.";
+    }
+  };
+  window.__redraw = null;
+}
+
+// ---------- stepper ----------
+let cur = 0;
+const main = document.getElementById("step"), dots = document.getElementById("dots"), back = document.getElementById("back"), next = document.getElementById("next");
+steps.forEach((_, i) => { const d = document.createElement("button"); d.className = "dot"; d.setAttribute("aria-label", "Step " + (i + 1)); d.onclick = () => go(i); dots.appendChild(d); });
+function go(i) {
+  cur = Math.max(0, Math.min(steps.length - 1, i));
+  main.innerHTML = ""; main.classList.remove("step"); void main.offsetWidth; main.classList.add("step");
+  steps[cur](main);
+  [...dots.children].forEach((d, j) => { d.className = "dot" + (j === cur ? " on" : j < cur ? " done" : ""); });
+  back.disabled = cur === 0; next.disabled = cur === steps.length - 1;
+  window.scrollTo({ top: 0 });
+}
+back.onclick = () => go(cur - 1);
+next.onclick = () => go(cur + 1);
+window.addEventListener("resize", () => window.__redraw && window.__redraw());
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => window.__redraw && window.__redraw());
+new MutationObserver(() => window.__redraw && window.__redraw()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+go(0);
+</script>
+</body>
+</html>
