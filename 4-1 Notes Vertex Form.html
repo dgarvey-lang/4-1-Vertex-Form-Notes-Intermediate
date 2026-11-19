@@ -237,9 +237,9 @@ const steps = [
     label: "a", values: [-3, -2, -1, -0.5, -0.25, 0.25, 0.5, 1, 2, 3], fmt: v => fmtA(v) || "1",
     tries: [{ v: -1, eq: [-1, 0, 0] }, { v: 0.5, eq: [0.5, 0, 0] }, { v: 3, eq: [3, 0, 0] }],
     questions: [
-      ["When a is <b>negative</b> (like −1), the parabola…", ["gets wider", "flips upside down", "moves left"], "flips upside down", "A negative a reflects the graph so it opens down."],
-      ["When a is a <b>fraction</b> between 0 and 1 (like ½), the parabola gets…", ["wider", "narrower"], "wider", "A fraction less than 1 makes it wider."],
-      ["When a is <b>bigger than 1</b> (like 3), the parabola gets…", ["wider", "narrower"], "narrower", "A number greater than 1 makes it narrower."],
+      ["When a is <b>negative</b> (like −1), the parabola…", ["gets wider (shrink)", "flips upside down", "moves left"], "flips upside down", "A negative a reflects the graph so it opens down."],
+      ["When a is a <b>fraction</b> between 0 and 1 (like ½), the parabola gets…", ["wider (shrink)", "narrower (stretch)"], "wider (shrink)", "A fraction less than 1 makes it wider (shrink)."],
+      ["When a is <b>bigger than 1</b> (like 3), the parabola gets…", ["wider (shrink)", "narrower (stretch)"], "narrower (stretch)", "A number greater than 1 makes it narrower (stretch)."],
     ],
   }),
   el => explorer(el, {
@@ -263,7 +263,7 @@ const steps = [
     ],
   }),
   el => predict(el, "Put it together", [-1, 4, 0],
-    ["Reflection (opens down)", "Shift 4 right", "Shift 4 left", "Wider"],
+    ["Reflection (opens down)", "Shift 4 right", "Shift 4 left", "Wider (shrink)"],
     ["Reflection (opens down)", "Shift 4 right"]),
   el => predict(el, "Put it together", [1, -3, -5],
     ["Shift 3 left", "Shift 3 right", "Shift 5 up", "Shift 5 down"],
@@ -273,8 +273,8 @@ const steps = [
       <div class="eq">y = <span class="a">a</span>(x − h)² + k</div>
       <div class="rule">
         <div><b>a is negative</b><span>reflection, opens down</span></div>
-        <div><b>a is bigger than 1</b><span>narrower</span></div>
-        <div><b>a is between 0 and 1</b><span>wider</span></div>
+        <div><b>a is bigger than 1</b><span>narrower (stretch)</span></div>
+        <div><b>a is between 0 and 1</b><span>wider (shrink)</span></div>
         <div><b>(x − h)</b><span>moves RIGHT h</span></div>
         <div><b>(x + h)</b><span>moves LEFT h</span></div>
         <div><b>+ k at the end</b><span>moves UP k</span></div>
@@ -388,8 +388,8 @@ function balloon(el) {
       <button class="chip" id="bplay">Pause</button>
     </div>
     <div class="rule">
-      <div><b>Stretch (a bigger than 1)</b><span>the parabola gets NARROWER</span></div>
-      <div><b>Press down (a between 0 and 1)</b><span>the parabola gets WIDER</span></div>
+      <div><b>Stretch (a bigger than 1)</b><span>the parabola gets NARROWER (stretch)</span></div>
+      <div><b>Press down (a between 0 and 1)</b><span>the parabola gets WIDER (shrink)</span></div>
     </div>`;
   const cv = el.querySelector("#bc"), capEl = el.querySelector("#bcap"), playB = el.querySelector("#bplay");
   const S = { stretch: { a: 3, T: 7.5 }, normal: { a: 1, T: 5 }, press: { a: 1 / 3, T: 2.6 } };
@@ -453,8 +453,8 @@ function balloon(el) {
     const near = (v, x) => Math.abs(v - x) < 0.03;
     const aTxt = near(a, 3) ? "3" : near(a, 1) ? "1" : near(a, 1 / 3) ? "⅓" : a.toFixed(1);
     let msg = "Normal: y = x²";
-    if (a > 1.05) msg = `Stretching: a = ${aTxt} → NARROWER`;
-    if (a < 0.95) msg = `Pressing down: a = ${aTxt} → WIDER`;
+    if (a > 1.05) msg = `Stretching: a = ${aTxt} → NARROWER (stretch)`;
+    if (a < 0.95) msg = `Pressing down: a = ${aTxt} → WIDER (shrink)`;
     capEl.textContent = msg;
   }
   function arrow(g, x, yFrom, yTo, col) {
@@ -488,11 +488,11 @@ function balloon(el) {
 
 function transforms(el, a, h, k, onRight) {
   const H = Math.abs(h) || 3, K = Math.abs(k) || 4;
-  const opts = ["Reflection", "Wider", "Narrower", `Left ${H}`, `Right ${H}`, `Up ${K}`, `Down ${K}`];
+  const opts = ["Reflection", "Wider (shrink)", "Narrower (stretch)", `Left ${H}`, `Right ${H}`, `Up ${K}`, `Down ${K}`];
   const ans = [];
   if (a < 0) ans.push("Reflection");
-  if (Math.abs(a) < 1) ans.push("Wider");
-  if (Math.abs(a) > 1) ans.push("Narrower");
+  if (Math.abs(a) < 1) ans.push("Wider (shrink)");
+  if (Math.abs(a) > 1) ans.push("Narrower (stretch)");
   if (h < 0) ans.push(`Left ${H}`);
   if (h > 0) ans.push(`Right ${H}`);
   if (k > 0) ans.push(`Up ${K}`);
