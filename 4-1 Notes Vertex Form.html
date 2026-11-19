@@ -351,15 +351,59 @@ function practice(el, [a, h, k], n, total) {
     if (H === h && K === k) {
       vfb.className = "fb right"; vfb.textContent = `Yes! The vertex is (${h}, ${k}).`;
       if (shown) return; shown = true;
+      const once = f => { let done = false; return () => { if (!done) { done = true; f(); } }; };
       question(more, "2. Which way does it open?", ["opens up", "opens down"], a > 0 ? "opens up" : "opens down",
-        a > 0 ? "a is positive, so it opens up and the vertex is a minimum." : "a is negative, so it opens down and the vertex is a maximum.",
-        () => { gw.hidden = false; window.__redraw = () => draw(cv, [{ a: 1, h: 0, k: 0, parent: true }, { a, h, k, vertex: true }]); window.__redraw(); });
+        a > 0 ? "a is positive, so it opens up." : "a is negative, so it opens down.",
+        once(() => question(more, "3. Is the vertex a maximum or a minimum?", ["maximum", "minimum"], a > 0 ? "minimum" : "maximum",
+          a > 0 ? "It opens up, so the vertex is the lowest point: a minimum." : "It opens down, so the vertex is the highest point: a maximum.",
+          once(() => transforms(more, a, h, k, () => { gw.hidden = false; window.__redraw = () => draw(cv, [{ a: 1, h: 0, k: 0, parent: true }, { a, h, k, vertex: true }]); window.__redraw(); })))));
     } else {
       vfb.className = "fb wrong";
       vfb.textContent = H === -h && K === k && h !== 0 ? "Check the sign on h. (x − h) means the vertex x is +h." : "Not yet. The vertex is (h, k). Look at the number inside the parentheses and the number at the end.";
     }
   };
   window.__redraw = null;
+}
+
+function transforms(el, a, h, k, onRight) {
+  const H = Math.abs(h) || 3, K = Math.abs(k) || 4;
+  const opts = ["Reflection", "Wider", "Narrower", `Left ${H}`, `Right ${H}`, `Up ${K}`, `Down ${K}`];
+  const ans = [];
+  if (a < 0) ans.push("Reflection");
+  if (Math.abs(a) < 1) ans.push("Wider");
+  if (Math.abs(a) > 1) ans.push("Narrower");
+  if (h < 0) ans.push(`Left ${H}`);
+  if (h > 0) ans.push(`Right ${H}`);
+  if (k > 0) ans.push(`Up ${K}`);
+  if (k < 0) ans.push(`Down ${K}`);
+  const q = document.createElement("div"); q.className = "q";
+  q.innerHTML = `<h2>4. Describe the transformations from y = x²</h2>
+    <p class="small muted">Pick every change that happens, then check.</p>
+    <div class="opts"></div><div><button class="btn" style="font-size:15px">Check</button></div>
+    <div class="fb" aria-live="polite"></div>`;
+  const box = q.querySelector(".opts"), fb = q.querySelector(".fb"), picked = new Set();
+  opts.forEach(o => {
+    const b = document.createElement("button"); b.className = "opt"; b.textContent = o; b.setAttribute("aria-pressed", "false");
+    b.onclick = () => {
+      picked.has(o) ? picked.delete(o) : picked.add(o);
+      b.style.borderColor = picked.has(o) ? "var(--accent)" : ""; b.style.background = picked.has(o) ? "var(--accent-soft)" : "";
+      b.setAttribute("aria-pressed", picked.has(o));
+    };
+    box.appendChild(b);
+  });
+  let done = false;
+  q.querySelector(".btn").onclick = () => {
+    const ok = ans.length === picked.size && ans.every(x => picked.has(x));
+    if (ok) {
+      fb.className = "fb right"; fb.textContent = "Yes! " + ans.join("; ") + ". Here is the graph.";
+      if (!done) { done = true; onRight(); }
+    } else {
+      const missing = ans.filter(x => !picked.has(x)).length, extra = [...picked].filter(x => !ans.includes(x)).length;
+      fb.className = "fb wrong";
+      fb.textContent = "Not quite. " + (missing ? `You are missing ${missing}. ` : "") + (extra ? `${extra} of your choices ${extra === 1 ? "does" : "do"} not happen. ` : "") + "Look at a, the number inside the parentheses, and the number at the end.";
+    }
+  };
+  el.appendChild(q);
 }
 
 // ---------- stepper ----------
